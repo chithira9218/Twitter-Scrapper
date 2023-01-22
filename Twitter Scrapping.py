@@ -58,7 +58,7 @@ for i, tweets in enumerate(sntwitter.TwitterSearchScraper('{}'.format(Username))
         break
     tweet_data.append([tweets.date,tweets.id,tweets.content,tweets.user.username,tweets.url,tweets.hashtags,tweets.replyCount,tweets.likeCount])
 
- #Store the data in a collection labeled with the hashtag
+ #Store the data in a collection labeled with the Username
 start_date = datetime.datetime(2023, 1, 1)
 end_date = datetime.datetime(2023, 1, 20)
 time_interval = end_date - start_date
