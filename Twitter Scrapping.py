@@ -1,53 +1,82 @@
-
-#Import_required_modules
+#importing modules
+import snscrape.modules.twitter as sntwitter
 import pandas as pd
+from IPython.display import display
+from time import sleep
 import pymongo
 import streamlit as st
-import snscrape.modules.twitter as sntwitter
 import datetime
-
-# Create a text input for the Username
-Username =input('Enter the Username:')
-Limit=input('Enter the Limit')
+import numpy as np
 
 
-# Connect to the database
-client = pymongo.MongoClient('mongodb://127.0.0.1:27017')
-db = client.twitter_data
+
+# Display the title
+st.title("Twitter Scrapper")
 
 
-# Scrape tweets containing the hashtag
-tweets = []
-for tweet in sntwitter.TwitterSearchScraper('{}'.format(Username)).get_items():
-    if len(tweets)== Limit:
+#Form to display the Tweet
+with st.form(key="form"):
+        Username=st.text_input(label="Enter the Tweet")
+
+    #Form to display the limit
+        Number=st.slider("Enter the Limit",10,1000,500)
+        st.write("Limit selected:",Number)
+
+    # To display start date
+        d = st.date_input(
+        "Select StartDate",
+        datetime.date(2019, 7, 6))
+        st.write('start date:', d)
+#   To display end date
+        f = st.date_input(
+        "Select End Date",
+         datetime.date(2020, 8, 10))
+        st.write('end date:', f)
+        st.form_submit_button('Store into MongoDB')
+        st.form_submit_button('Download CSV File')
+        st.form_submit_button('Download Json File')
+        st.form_submit_button('Submit')
+        
+#Creating a list to store the scrapped data
+tweet_data=[]
+
+Username=input("Enter the Tweet:")
+Number=int(input("How many tweets do you want to scrape:"))
+
+#Connecting with MongoDB
+myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+
+
+#Creating Database
+db = myclient.scrapped_data
+
+
+
+#Scraping the Twitter data
+for i, tweets in enumerate(sntwitter.TwitterSearchScraper('{}'.format(Username)).get_items()):
+    if i>Number:
         break
-    else:
-         tweets.append({'date': tweet.date, 'id': tweet.id, 'url': tweet.url,'tweet_content': tweet.content,'user': tweet.user.username, 'replyCount': tweet.replyCount, 'retweet_count': tweet.retweetCount,'language': tweet.lang, 'source': tweet.source, 'like_count': tweet.likeCount})
+    tweet_data.append([tweets.date,tweets.id,tweets.content,tweets.user.username,tweets.url,tweets.hashtags,tweets.replyCount,tweets.likeCount])
 
-
-# Store the data in a collection labeled with the hashtag
-start_date = datetime.datetime(2022, 12, 10)
+ #Store the data in a collection labeled with the hashtag
+start_date = datetime.datetime(2023, 1, 1)
 end_date = datetime.datetime(2023, 1, 20)
 time_interval = end_date - start_date
 collection=db[Username+str(time_interval)]
 
 
- #Add a button to upload the data to the database
-if st.button('Upload to database'):
-      client = pymongo.MongoClient('mongodb://127.0.0.1:27017')
-      db = client.twitter_data
-      collection=db[Username+str(time_interval)]
-      st.success('Data uploaded')
+
+#Creating the dataframe
+df = pd.DataFrame(tweet_data,columns=['Date','id','Tweets','username','url','Hashtag','Replycount','Likecount'])
+
+#Display dataframe
+display(df)
 
 
-# Converting collection to a dataframe
-data = pd.DataFrame(list(collection.find()))
 
-#To view dataframe
-print(data)
+# Download the dataframe in CSV format
+df.to_csv(f"{Username}_tweets.csv", index=False)
 
-# Download the CSV file
-data.to_csv(f"{Username}_tweets.csv", index=False)
 
-# Download the Json file
-data.to_json(f"{Username}_tweets.json",orient='records', indent=4)
+# Download the dataframe in JSON format
+df.to_json(f"{Username}_tweets.json",orient='records', force_ascii=False, indent=4)
