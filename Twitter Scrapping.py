@@ -81,7 +81,6 @@ with st.sidebar:
 
 # display collections
 if not dfm.empty: 
-    #st.write( len(dfm),'Records Found')
     st.write(dfm) 
 
 
