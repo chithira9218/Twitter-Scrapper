@@ -1,0 +1,7 @@
+streamlit     1.17.0
+snscrape      0.5.0.20230113
+pymongo       4.3.3
+pip           22.3.1
+pandas        1.5.2
+jsonschema    4.17.0
+python        3.9.0
